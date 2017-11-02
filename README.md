@@ -16,10 +16,21 @@ __LINUX__
 
 # Explanation of Each Phase
 
-- Phase 1
-First, we need to define our subnet mask for every host that will be given. In my program, I use /8. For subnet mask /8, I copy the first segment of the host address (1 byte), and concat it with 0.0.0/8 so it becomes complete subnet address.
+__Phase 1__
 
-- Phase 2
-For every subnet given, we need to get the subnet mask number/prefix using function 'getMask'. Then, we can calculate the number of host using formula 2^(32-(output(getMask))).
+- First, we need to define our subnet mask for every host that will be given. In my program, I use /8.
+- For subnet mask /8, I copy the first segment of the host address (1 byte)
+- Concat it with 0.0.0/8 so it becomes complete subnet address.
 
-- Phase 3
+__Phase 2__
+
+- For every subnet given, we need to get the subnet mask number/prefix using function 'getMask'
+- Calculate the number of host using formula 2^(32-(output(getMask))).
+
+__Phase 3__
+
+- Get the prefix of subnet address using function 'getMask'. If the prefix is 0, the mask will be 0, else we use bitwise shift to make the binary version of the prefix
+- Extract the subnet address without the prefix and store it, do the same thing to store the binary version of the mask.
+- Convert the string of host, subnet(without prefix), and mask from string to address type in binary.
+- Do logical AND on the host with the mask, apply the same method on the subnet.
+- Convert the subnet and host back to string. Compare both of the strings, and return 1 if the they match.

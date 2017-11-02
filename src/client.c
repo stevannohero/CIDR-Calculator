@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <netdb.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #include <string.h>
 #include <unistd.h>
 
@@ -56,48 +57,63 @@ void countHosts(char *subnet, char *host) {
 }
 
 int isSubnetValid(char *subnet, char *host) {
-   unsigned long mask;
+   unsigned long bin_mask;
    int c = getMask(subnet);
-   char str[512];
-   bzero((char *) str, 512);    
+   char temp_mask[512];
+   bzero((char *) temp_mask, 512);    
 
-   if (mask == 0) {
-      mask = 0;
+   if (c == 0) {
+      bin_mask = 0;
    } else {
-      mask = (0xFFFFFFFF << (32 - c) & 0xFFFFFFFF);
+      bin_mask = (0xFFFFFFFF << (32-c) & 0xFFFFFFFF);
    }
 
-   sprintf(str, "%lu.%lu.%lu.%lu", mask >> 24, (mask >> 16) & 0xFF, (mask >> 8) & 0xFF, mask & 0xFF);
+   sprintf(temp_mask, "%lu.%lu.%lu.%lu", bin_mask >> 24, (bin_mask >> 16) & 0xFF, (bin_mask >> 8) & 0xFF, bin_mask & 0xFF);
 
-   char temp[512];
-   bzero((char *) temp, 512);
+   char temp_subnet[512];
+   bzero((char *) temp_subnet, 512);
 
    int i = 0;
    while (subnet[i] != '/') {
-      temp[i] = subnet[i];
+      temp_subnet[i] = subnet[i];
       i++;
    }
 
    struct sockaddr_in hostaddr, maskaddr, subaddr;
 
+   // string to address in binary
    inet_pton(AF_INET, host, &(hostaddr.sin_addr)); 
-   inet_pton(AF_INET, str, &(maskaddr.sin_addr));
-   inet_pton(AF_INET, temp, &(subaddr.sin_addr)); 
-
+   inet_pton(AF_INET, temp_mask, &(maskaddr.sin_addr));
+   inet_pton(AF_INET, temp_subnet, &(subaddr.sin_addr)); 
+   
+   // logical AND
    hostaddr.sin_addr.s_addr = (hostaddr.sin_addr.s_addr & maskaddr.sin_addr.s_addr);
    subaddr.sin_addr.s_addr = (subaddr.sin_addr.s_addr & maskaddr.sin_addr.s_addr);
 
-   char sub2[512], host2[512];
-   bzero((char *) sub2, 512);
-   bzero((char *) host2, 512);
+   char _subnet[512], _host[512];
+   bzero((char *) _subnet, 512);
+   bzero((char *) _host, 512);
 
-   inet_ntop(AF_INET, &(subaddr.sin_addr), sub2, INET_ADDRSTRLEN);
-   inet_ntop(AF_INET, &(hostaddr.sin_addr), host2, INET_ADDRSTRLEN);
+   // address in binary to string
+   inet_ntop(AF_INET, &(subaddr.sin_addr), _subnet, INET_ADDRSTRLEN);
+   inet_ntop(AF_INET, &(hostaddr.sin_addr), _host, INET_ADDRSTRLEN);
 
-   if (strcmp(sub2, host2) == 0)
+   // compare subnet and host
+   int tempc = c;
+   int z = 0;
+   int count = 0;
+   while (tempc > 0){
+      if (_subnet[z] == _host[z]){
+         count++;
+      }
+      z++;
+      tempc--;
+   }
+   if (count == c) {
       return 1;
-   else
-      return 0;  
+   } else {
+      return 0;
+   }
 }
 
 int main(int argc, char *argv[]) {
@@ -183,9 +199,9 @@ int main(int argc, char *argv[]) {
       host[strlen(host)-1] = '\0';
       if (isSubnetValid(subnet, host) == 1) {
          write(sockfd, "T\n", 2); 
-	  } else {
+      } else {
          write(sockfd, "F\n", 2); 
-	 }
+      }
    }
    recv_until(sockfd, buffer, "\n");
    printf("%s", buffer);
