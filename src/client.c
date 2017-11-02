@@ -181,7 +181,7 @@ int main(int argc, char *argv[]) {
       recv_until(sockfd, buffer, "Host: ");
       recv_until(sockfd, host, "\n");
       host[strlen(host)-1] = '\0';
-      if (isSubnetValid(subnet, host)) {
+      if (isSubnetValid(subnet, host) == 1) {
          write(sockfd, "T\n", 2); 
 	  } else {
          write(sockfd, "F\n", 2); 
