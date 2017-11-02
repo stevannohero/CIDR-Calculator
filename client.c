@@ -56,11 +56,48 @@ void countHosts(char *subnet, char *host) {
 }
 
 int isSubnetValid(char *subnet, char *host) {
-   char temphost[32];
-   char tempsubnet[32];
-   
-   // not yet implemented
-   return 1;
+   unsigned long mask;
+   int c = getMask(subnet);
+   char str[512];
+   bzero((char *) str, 512);    
+
+   if (mask == 0) {
+      mask = 0;
+   } else {
+      mask = (0xFFFFFFFF << (32 - c) & 0xFFFFFFFF);
+   }
+
+   sprintf(str, "%lu.%lu.%lu.%lu", mask >> 24, (mask >> 16) & 0xFF, (mask >> 8) & 0xFF, mask & 0xFF);
+
+   char temp[512];
+   bzero((char *) temp, 512);
+
+   int i = 0;
+   while (subnet[i] != '/') {
+      temp[i] = subnet[i];
+      i++;
+   }
+
+   struct sockaddr_in hostaddr, maskaddr, subaddr;
+
+   inet_pton(AF_INET, host, &(hostaddr.sin_addr)); 
+   inet_pton(AF_INET, str, &(maskaddr.sin_addr));
+   inet_pton(AF_INET, temp, &(subaddr.sin_addr)); 
+
+   hostaddr.sin_addr.s_addr = (hostaddr.sin_addr.s_addr & maskaddr.sin_addr.s_addr);
+   subaddr.sin_addr.s_addr = (subaddr.sin_addr.s_addr & maskaddr.sin_addr.s_addr);
+
+   char sub2[512], host2[512];
+   bzero((char *) sub2, 512);
+   bzero((char *) host2, 512);
+
+   inet_ntop(AF_INET, &(subaddr.sin_addr), sub2, INET_ADDRSTRLEN);
+   inet_ntop(AF_INET, &(hostaddr.sin_addr), host2, INET_ADDRSTRLEN);
+
+   if (strcmp(sub2, host2) == 0)
+      return 1;
+   else
+      return 0;  
 }
 
 int main(int argc, char *argv[]) {
