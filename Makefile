@@ -1,2 +1,2 @@
-make :
-	gcc client.c -o client
+all :
+	gcc src/client.c -o client
