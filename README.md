@@ -3,7 +3,8 @@
 Implementation of CIDR (Classless Inter-Domain Routing) Calculator
 in C Language
 
-# Implemented by Stevanno Hero Leadervand (NIM. 13515082)
+# Implemented By
+Stevanno Hero Leadervand (NIM. 13515082)
 
 # How To Compile and Run
 
